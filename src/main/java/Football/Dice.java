@@ -1,5 +1,6 @@
 package Football;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
@@ -8,26 +9,18 @@ public class Dice {
 
     private String colour;
     private int faces;
-    private int[] values;
+    private ArrayList<Integer> values;
 
-    private int dieRoll;
-
-    public Dice(String inColour, int inFaces, int[] inValues) {
+    public Dice(String inColour, int inFaces, ArrayList<Integer> inValues) {
         colour = inColour;
         faces = inFaces;
 
-        values = new int[faces];
-
-        for (int i = 0; i < faces; i++)
-        {
-            values[i] = inValues[i];
-        }
-
+        values = inValues;
     }
 
     public int rollDie() {
 
-        dieRoll = values[randIntGen(faces)];
+        int dieRoll = values.get(randIntGen(faces));
 
         return dieRoll;
 
@@ -41,8 +34,7 @@ public class Dice {
         return faces;
     }
 
-
-    public int[] getValues() {
+    public ArrayList<Integer> getValues() {
         return values;
     }
 
@@ -50,7 +42,7 @@ public class Dice {
         String returnString = "";
 
         for (int i = 0; i < faces; i++) {
-            returnString = returnString + Integer.toString(values[i]) + ";";
+            returnString = returnString + Integer.toString(values.get(i)) + ";";
         }
 
         return returnString;
@@ -68,14 +60,13 @@ public class Dice {
 
     public void setValues(int[] values) {
         for (int i=0; i<faces; i++) {
-            this.values[i] = values[i];
+            this.values.set(i, values[i]);
         }
     }
 
     public int randIntGen(int bound) {
         Random randomIntGen = new Random();
-        int randVal = randomIntGen.nextInt(bound);
-        return randVal;
+        return randomIntGen.nextInt(bound);
     }
 
     @Override
@@ -93,20 +84,13 @@ public class Dice {
         } else {
             Dice other = (Dice) obj;
 
-            if (!colour.equals(other.getColour())) {
-                return false;
-            } else {
-                return true;
-            }
+            return colour.equals(other.getColour());
         }
 
     }
 
     @Override
     public int hashCode() {
-
-        int result = Objects.hash(colour, faces, dieRoll);
-        result = 31 * result + Arrays.hashCode(values);
-        return result;
+        return super.hashCode();
     }
 }

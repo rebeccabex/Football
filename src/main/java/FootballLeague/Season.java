@@ -10,18 +10,12 @@ import java.util.ArrayList;
 
 public class Season {
 
-    private int noOfDice;
-    private String[] diceColours;
-    private int[] diceFaces;
-    private int[][] diceValues;
-
     private ArrayList<Dice> diceSet;
 
     private int noOfTeams;
     private ArrayList<LeagueTeam> teamList;
 
     private ArrayList<DiceSelection> diceChart;
-    private int chartRows;
 
     private int timesPlay;
 
@@ -29,42 +23,24 @@ public class Season {
 
     private String chartFileName;
 
-    public Season(ArrayList<String> diceData, int inNoOfDice, ArrayList<String> chartData, int chartLines, ArrayList<String> teamData,
-                  int inNoOfTeams, ArrayList<String> optionsData, int optionsLines)
+    public Season(ArrayList<String> diceData, ArrayList<String> chartData, ArrayList<String> teamData,
+                  ArrayList<String> optionsData)
     {
 
-        parseOptions(optionsData, optionsLines);
+        parseOptions(optionsData);
 
-        // timesPlay = 1; // TODO change to allow input
-
-        noOfDice = inNoOfDice;
-
-        diceColours = new String[noOfDice];
-        diceValues = new int[noOfDice][6];
-        diceFaces = new int[noOfDice];
+        diceSet = new ArrayList<>();
         decodeDice(diceData);
-        diceSet = new ArrayList<Dice>();
 
-        for (int i = 0; i < noOfDice; i++) {
-            int[] thisDieVals = new int[diceFaces[i]];
-            for (int j = 0; j < diceFaces[i]; j++) {
-                thisDieVals[j] = diceValues[i][j];
-            }
-
-            Dice newDie = new Dice(diceColours[i], diceFaces[i], thisDieVals);
-            diceSet.add(newDie);
-        }
-
-        diceChart = new ArrayList<DiceSelection>();
-        chartRows = chartLines;
+        diceChart = new ArrayList<>();
         decodeChart(chartData);
 
-        noOfTeams = inNoOfTeams;
 
-        teamList = new ArrayList<LeagueTeam>();
+        teamList = new ArrayList<>();
         decodeTeams(teamData);
+        noOfTeams = teamList.size();
 
-        matchList = new ArrayList<LeagueMatch>();
+        matchList = new ArrayList<>();
 
         runSeason();
 
@@ -74,7 +50,7 @@ public class Season {
     }
 
     public void printSeason(ArrayList<LeagueTeam> sortedTeams) {
-        String fileName = "C:\\Users\\User\\Documents\\Other\\Programmes\\footballSeason\\FinalTable.txt";
+        String fileName = "FinalTable.txt";
 
         WriteFile data = new WriteFile(fileName, true);
         String text = "";
@@ -94,40 +70,24 @@ public class Season {
 
     public static void main(String[] args) {
 
-        String tempChartFileName = "StdHA.txt"; // need to implement Options file properly
+        String tempChartFileName = "StdHA.txt"; // TODO need to implement Options file to set chart file name first
 
-        String diceFilePath = "C:\\Users\\User\\Documents\\Other\\Programmes\\footballSeason\\Dice Values.txt";
-        String chartFilePath = "C:\\Users\\User\\Documents\\Other\\Programmes\\footballSeason\\" + tempChartFileName;
-        String teamFilePath = "C:\\Users\\User\\Documents\\Other\\Programmes\\footballSeason\\Teams.txt";
-        String optionsPath = System.getProperty("user.dir") + "\\footballSeason\\Options.txt";
-
-        ArrayList<String> diceData;
-        int inNoOfDice;
-        ArrayList<String> chartData;
-        int chartLines;
-        ArrayList<String> teamData;
-        int inNoOfTeams;
-        ArrayList<String> optionsData;
-        int optionsLines;
+        String diceFilePath = "Dice Values.txt";
+        String chartFilePath = tempChartFileName;
+        String teamFilePath = "Teams.txt";
+        String optionsPath = "Options.txt";
 
         ReadFile diceFile = new ReadFile(diceFilePath);
         ReadFile chartFile = new ReadFile(chartFilePath);
         ReadFile teamFile = new ReadFile(teamFilePath);
         ReadFile optionsFile = new ReadFile(optionsPath);
 
-        diceData = diceFile.readFromFile();
-        inNoOfDice = diceData.size();
+        ArrayList<String> diceData = diceFile.readFromFile();
+        ArrayList<String> chartData = chartFile.readFromFile();
+        ArrayList<String> teamData = teamFile.readFromFile();
+        ArrayList<String> optionsData = optionsFile.readFromFile();
 
-        chartData = chartFile.readFromFile();
-        chartLines = chartData.size();
-
-        teamData = teamFile.readFromFile();
-        inNoOfTeams = teamData.size();
-
-        optionsData = optionsFile.readFromFile();
-        optionsLines = optionsData.size();
-
-        Season season = new Season(diceData, inNoOfDice, chartData, chartLines, teamData, inNoOfTeams, optionsData, optionsLines);
+        Season season = new Season(diceData, chartData, teamData, optionsData);
 
     }
 
@@ -167,8 +127,6 @@ public class Season {
         int team1Score = matchDice.rollDice1();
         int team2Score = matchDice.rollDice2();
 
-        // System.out.println(team1.getName() + " (" + rating1 + ") v (" + rating2 + ") " + team2.getName() + "; DiceSelection: " + matchDice.toString());
-
         match.setScore(team1Score, team2Score);
 
         team1.addMatch(match);
@@ -182,7 +140,7 @@ public class Season {
 
     private DiceSelection calcDice(int ratingDiff, boolean isNeutral) {
 
-        boolean negRD = (ratingDiff < 0) ? true : false;
+        boolean negRD = ratingDiff < 0;
 
         float fRatingDiff = Math.abs((float) ratingDiff);
 
@@ -192,9 +150,7 @@ public class Season {
 
 //deal with null
 
-        DiceSelection diceSelection = findDiceSelection(ratingGap);
-
-        return diceSelection;
+        return findDiceSelection(ratingGap);
 
     }
 
@@ -222,35 +178,33 @@ public class Season {
     }
 
     private void decodeDice(ArrayList<String> diceData) {
-        for (int i = 0; i < noOfDice; i++) {
+        for (String d: diceData) {
 
             boolean stillParsing = true;
 
-            int counter = 0;
+            int currSpace = d.indexOf(" ");
+            int nextSpace;
 
-            int currSpace = diceData.get(i).indexOf(" ");
-            int nextSpace = currSpace;
-
-            diceColours[i] = diceData.get(i).substring(0, currSpace);
+            String dieColour = d.substring(0, currSpace);
+            ArrayList<Integer> dieVals = new ArrayList<>();
 
             while (stillParsing) {
 
-                nextSpace = diceData.get(i).indexOf(" ", currSpace + 1);
-                int nextVal = 0;
+                nextSpace = d.indexOf(" ", currSpace + 1);
+                int nextVal;
                 if (nextSpace != -1) {
-                    nextVal = Integer.parseInt(diceData.get(i).substring(currSpace+1, nextSpace));
+                    nextVal = Integer.parseInt(d.substring(currSpace+1, nextSpace));
                     currSpace = nextSpace;
                 } else {
-                    nextVal = Integer.parseInt(diceData.get(i).substring(currSpace + 1));
+                    nextVal = Integer.parseInt(d.substring(currSpace + 1));
                     stillParsing = false;
                 }
-
-                diceValues[i][counter] = nextVal;
-
-                counter++;
+                dieVals.add(nextVal);
             }
 
-            diceFaces[i] = counter;
+            int dieFace = dieVals.size();
+            Dice newDie = new Dice(dieColour, dieFace, dieVals);
+            diceSet.add(newDie);
 
         }
     }
@@ -259,18 +213,17 @@ public class Season {
 
         for (String d : chartData) {
 
-            ArrayList<Dice> currLineHome = new ArrayList<Dice>();
-            ArrayList<Dice> currLineAway = new ArrayList<Dice>();
+            ArrayList<Dice> currLineHome = new ArrayList<>();
+            ArrayList<Dice> currLineAway = new ArrayList<>();
 
             boolean stillParsing = true;
 
             int currSpace = d.indexOf(" ");
-            int nextSpace = currSpace;
-
-            int versus = d.indexOf("v");
+            int nextSpace;
 
             int ratingGap = Integer.parseInt(d.substring(0, currSpace));
 
+            // parse line for home team
             while (stillParsing) {
                 nextSpace = d.indexOf(" ", currSpace + 1);
                 String diceName = d.substring(currSpace+1, nextSpace);
@@ -285,6 +238,7 @@ public class Season {
 
             stillParsing = true;
 
+            // parse line for away team
             while (stillParsing) {
                 nextSpace = d.indexOf(" ", currSpace + 1);
 
@@ -306,7 +260,6 @@ public class Season {
 
             DiceSelection newDiceSelection = new DiceSelection(ratingGap, currLineHome, currLineAway);
             diceChart.add(newDiceSelection);
-
         }
     }
 
@@ -315,42 +268,44 @@ public class Season {
 
             int startName = d.indexOf("$");
             int endName = d.indexOf("$", startName + 1);
-
             String teamName = d.substring(startName+1, endName);
 
             int currSpace = d.indexOf(" ", endName);
-
             int nextSpace = d.indexOf(" ", currSpace + 1);
 
-            int teamRating = Integer.parseInt(d.substring(currSpace + 1, nextSpace));
-
-            currSpace = nextSpace;
-
+            int teamRating;
             int[] teamRes = new int[8];
-            for (int i = 0; i < 8; i++) {
 
-                nextSpace = d.indexOf(" ", currSpace + 1);
+            if (nextSpace == -1) {
+                teamRating = Integer.parseInt(d.substring(currSpace + 1));
+            } else {
+                teamRating = Integer.parseInt(d.substring(currSpace + 1, nextSpace));
 
-                int nextVal = 0;
-
-                if (nextSpace != -1) {
-                    nextVal = Integer.parseInt(d.substring(currSpace + 1, nextSpace));
-                } else {
-                    nextVal = Integer.parseInt(d.substring(currSpace + 1, d.length()));
-                }
-
-                teamRes[i] = nextVal;
                 currSpace = nextSpace;
 
+                for (int i = 0; i < 8; i++) {
+
+                    nextSpace = d.indexOf(" ", currSpace + 1);
+
+                    int nextVal;
+
+                    if (nextSpace != -1) {
+                        nextVal = Integer.parseInt(d.substring(currSpace + 1, nextSpace));
+                    } else {
+                        nextVal = Integer.parseInt(d.substring(currSpace + 1, d.length()));
+                    }
+
+                    teamRes[i] = nextVal;
+                    currSpace = nextSpace;
+                }
             }
+
             LeagueTeam newTeam = new LeagueTeam(teamName, teamRating, teamRes);
-
             teamList.add(newTeam);
-
         }
     }
 
-    private void parseOptions(ArrayList<String> optionsData, int optionsLines) {
+    private void parseOptions(ArrayList<String> optionsData) {
 
         chartFileName = "StdHA.txt";
         timesPlay = 2;

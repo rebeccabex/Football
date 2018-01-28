@@ -9,11 +9,7 @@ public class LeagueTeam extends Team {
     public LeagueTeam(String inName, int inRating, int[] inResults) {
         super(inName, inRating);
 
-        tableData = new int[inResults.length];
-
-        for (int i=0; i<8; i++) {
-            tableData[i] = inResults[i];
-        }
+        tableData = inResults;
     }
 
 
@@ -102,7 +98,7 @@ public class LeagueTeam extends Team {
     // will return array index in teamstats of required
     private int getStatPsn(String statName) {
 
-        int statPsn = 0;
+        int statPsn;
 
         switch (statName.toLowerCase()) {
             case "pld": case "played":
