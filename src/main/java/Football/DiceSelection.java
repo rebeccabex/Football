@@ -16,7 +16,6 @@ public class DiceSelection {
 
         team1Dice.addAll(team1);
         team2Dice.addAll(team2);
-
     }
 
     public int rollDice1() {

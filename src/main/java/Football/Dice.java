@@ -8,19 +8,18 @@ import java.util.Random;
 public class Dice {
 
     private String colour;
-    private int faces;
+    private int numberOfFaces;
     private ArrayList<Integer> values;
 
-    public Dice(String inColour, int inFaces, ArrayList<Integer> inValues) {
-        colour = inColour;
-        faces = inFaces;
-
-        values = inValues;
+    public Dice(String colour, ArrayList<Integer> values) {
+        this.colour = colour;
+        this.values = values;
+        numberOfFaces = this.values.size();
     }
 
     public int rollDie() {
 
-        int dieRoll = values.get(randIntGen(faces));
+        int dieRoll = values.get(randIntGen(numberOfFaces));
 
         return dieRoll;
 
@@ -31,7 +30,7 @@ public class Dice {
     }
 
     public int getFaces() {
-        return faces;
+        return numberOfFaces;
     }
 
     public ArrayList<Integer> getValues() {
@@ -41,7 +40,7 @@ public class Dice {
     public String getValuesString() {
         String returnString = "";
 
-        for (int i = 0; i < faces; i++) {
+        for (int i = 0; i < numberOfFaces; i++) {
             returnString = returnString + Integer.toString(values.get(i)) + ";";
         }
 
@@ -53,13 +52,13 @@ public class Dice {
         this.colour = colour;
     }
 
-    public void setFaces(int faces) {
-        this.faces = faces;
+    public void setFaces(int numberOfFaces) {
+        this.numberOfFaces = numberOfFaces;
     }
 
 
     public void setValues(int[] values) {
-        for (int i=0; i<faces; i++) {
+        for (int i=0; i<numberOfFaces; i++) {
             this.values.set(i, values[i]);
         }
     }

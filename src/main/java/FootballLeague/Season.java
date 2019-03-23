@@ -1,7 +1,7 @@
 package FootballLeague;
 
-
 import Football.Dice;
+import Football.DiceFunctions;
 import Football.DiceSelection;
 import Football.ReadFile;
 import Football.WriteFile;
@@ -29,12 +29,8 @@ public class Season {
 
         parseOptions(optionsData);
 
-        diceSet = new ArrayList<>();
-        decodeDice(diceData);
-
-        diceChart = new ArrayList<>();
-        decodeChart(chartData);
-
+        diceSet = decodeDice(diceData);
+        diceChart = decodeChart(chartData);
 
         teamList = new ArrayList<>();
         decodeTeams(teamData);
@@ -50,7 +46,7 @@ public class Season {
     }
 
     public void printSeason(ArrayList<LeagueTeam> sortedTeams) {
-        String fileName = "FinalTable.txt";
+        String fileName = "..\\..\\..\\FinalTable.txt";
 
         WriteFile data = new WriteFile(fileName, true);
         String text = "";
@@ -70,12 +66,14 @@ public class Season {
 
     public static void main(String[] args) {
 
+        String filepath = "..\\..\\..\\";
+    
         String tempChartFileName = "StdHA.txt"; // TODO need to implement Options file to set chart file name first
 
-        String diceFilePath = "Dice Values.txt";
-        String chartFilePath = tempChartFileName;
-        String teamFilePath = "Teams.txt";
-        String optionsPath = "Options.txt";
+        String diceFilePath = filepath + "Dice Values.txt";
+        String chartFilePath = filepath + tempChartFileName;
+        String teamFilePath = filepath + "Teams.txt";
+        String optionsPath = filepath + "Options.txt";
 
         ReadFile diceFile = new ReadFile(diceFilePath);
         ReadFile chartFile = new ReadFile(chartFilePath);
@@ -177,90 +175,12 @@ public class Season {
         return null;
     }
 
-    private void decodeDice(ArrayList<String> diceData) {
-        for (String d: diceData) {
-
-            boolean stillParsing = true;
-
-            int currSpace = d.indexOf(" ");
-            int nextSpace;
-
-            String dieColour = d.substring(0, currSpace);
-            ArrayList<Integer> dieVals = new ArrayList<>();
-
-            while (stillParsing) {
-
-                nextSpace = d.indexOf(" ", currSpace + 1);
-                int nextVal;
-                if (nextSpace != -1) {
-                    nextVal = Integer.parseInt(d.substring(currSpace+1, nextSpace));
-                    currSpace = nextSpace;
-                } else {
-                    nextVal = Integer.parseInt(d.substring(currSpace + 1));
-                    stillParsing = false;
-                }
-                dieVals.add(nextVal);
-            }
-
-            int dieFace = dieVals.size();
-            Dice newDie = new Dice(dieColour, dieFace, dieVals);
-            diceSet.add(newDie);
-
-        }
+    private ArrayList<Dice> decodeDice(ArrayList<String> diceData) {
+        return DiceFunctions.decodeDice(diceData);
     }
 
-    private void decodeChart(ArrayList<String> chartData) {
-
-        for (String d : chartData) {
-
-            ArrayList<Dice> currLineHome = new ArrayList<>();
-            ArrayList<Dice> currLineAway = new ArrayList<>();
-
-            boolean stillParsing = true;
-
-            int currSpace = d.indexOf(" ");
-            int nextSpace;
-
-            int ratingGap = Integer.parseInt(d.substring(0, currSpace));
-
-            // parse line for home team
-            while (stillParsing) {
-                nextSpace = d.indexOf(" ", currSpace + 1);
-                String diceName = d.substring(currSpace+1, nextSpace);
-                if (!diceName.equals("v")) {
-                    Dice die = findDie(diceName); // TODO Need to add check in case of error
-                    currLineHome.add(die);
-                } else {
-                    stillParsing = false;
-                }
-                currSpace = nextSpace;
-            }
-
-            stillParsing = true;
-
-            // parse line for away team
-            while (stillParsing) {
-                nextSpace = d.indexOf(" ", currSpace + 1);
-
-                String diceName = "";
-                if (nextSpace != -1) {
-                    diceName = d.substring(currSpace+1, nextSpace);
-                } else {
-                    diceName = d.substring(currSpace+1);
-                    stillParsing = false;
-                }
-
-                Dice die = findDie(diceName); // Need to add check in case of error
-                if (die.equals(null)) {
-                }
-
-                currLineAway.add(die);
-                currSpace = nextSpace;
-            }
-
-            DiceSelection newDiceSelection = new DiceSelection(ratingGap, currLineHome, currLineAway);
-            diceChart.add(newDiceSelection);
-        }
+    private ArrayList<DiceSelection> decodeChart(ArrayList<String> chartData) {
+        return DiceFunctions.decodeChart(chartData, diceSet);
     }
 
     private void decodeTeams(ArrayList<String> teamData) {
